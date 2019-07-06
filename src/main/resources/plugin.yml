@@ -1,0 +1,6 @@
+name: NicknameTag
+main: pl.szczodrzynski.nicknametag.Main
+version: '1.0'
+author: kubasz
+depend:
+  - ProtocolLib
