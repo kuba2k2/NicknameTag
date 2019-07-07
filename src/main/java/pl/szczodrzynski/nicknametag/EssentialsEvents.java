@@ -32,7 +32,6 @@ public class EssentialsEvents implements Listener {
         this.server = server;
         if (server.getPluginManager().isPluginEnabled("Essentials")) {
             server.getPluginManager().registerEvents(this, plugin);
-            server.getLogger().info("Essentials found");
         }
         else {
             server.getLogger().warning("Essentials NOT found");
@@ -61,16 +60,6 @@ public class EssentialsEvents implements Listener {
         playerInfo.setData(Collections.singletonList(playerInfoData));
 
         return playerInfo;
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerChatLowest(final AsyncPlayerChatEvent event) {
-        server.getLogger().info("Event LOWEST "+event.getEventName()+" player "+event.getPlayer().getDisplayName()+" format "+event.getFormat()+" message "+event.getMessage());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerChatMonitor(final AsyncPlayerChatEvent event) {
-        server.getLogger().info("Event MONITOR "+event.getEventName()+" player "+event.getPlayer().getDisplayName()+" format "+event.getFormat()+" message "+event.getMessage());
     }
 
     @EventHandler
