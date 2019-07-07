@@ -4,6 +4,7 @@ import com.comphenix.packetwrapper.*;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.*;
+import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
 import net.ess3.api.events.NickChangeEvent;
 import org.bukkit.Location;
@@ -11,10 +12,15 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
+
+import static pl.szczodrzynski.nicknametag.Utils.ut;
 
 public class EssentialsEvents implements Listener {
 
@@ -45,7 +51,7 @@ public class EssentialsEvents implements Listener {
         // create a PlayerInfoData, passing a GameProfile
         PlayerInfoData playerInfoData = new PlayerInfoData(
                 WrappedGameProfile.fromPlayer(player),
-                100,// TODO: 2019-07-06 get correct latency from entityPlayer
+                10,// TODO: 2019-07-06 get correct latency from entityPlayer
                 EnumWrappers.NativeGameMode.fromBukkit(player.getGameMode()),
                 WrappedChatComponent.fromText(newDisplayName)
         );
@@ -57,25 +63,37 @@ public class EssentialsEvents implements Listener {
         return playerInfo;
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerChatLowest(final AsyncPlayerChatEvent event) {
+        server.getLogger().info("Event LOWEST "+event.getEventName()+" player "+event.getPlayer().getDisplayName()+" format "+event.getFormat()+" message "+event.getMessage());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerChatMonitor(final AsyncPlayerChatEvent event) {
+        server.getLogger().info("Event MONITOR "+event.getEventName()+" player "+event.getPlayer().getDisplayName()+" format "+event.getFormat()+" message "+event.getMessage());
+    }
+
     @EventHandler
     public void onNickChange(NickChangeEvent event) {
-
         Player player = event.getController().getBase();
+        User target = (User) event.getController();
+        event.setCancelled(true);
+
+        // get the user input
         String newDisplayName = event.getValue();
-        if (newDisplayName == null) {
-            newDisplayName = player.getName();
-        }
-        newDisplayName = newDisplayName.replace("__", " ");
+        // change two underscores to allow spaces in the nickname
+        newDisplayName = newDisplayName == null ? null : newDisplayName.replace("__", " ");
+        // set the nickname in Essentials config (does not update Player.displayName yet)
+        target.setNickname(newDisplayName);
 
-        if (event.getController() instanceof User) {
-            User target = (User) event.getController();
-            event.setCancelled(true);
-            target.setNickname(newDisplayName);
-            target.setDisplayNick();
-        }
+        // get a nickname containing (optionally) 'ops-name-color', 'nickname-prefix'
+        newDisplayName = target.getNick(true, false, false);
 
-        newDisplayName = player.getDisplayName();
-
+        // can't call setDisplayNick here:
+        // this command changes playerlist display name (Player.setPlayerListName();)
+        // this may contain prefixes & suffixes
+        // since they are not displayed in the head tag, they will quickly be replaced with NicknameTag's packets
+        //target.setDisplayNick();
 
         try {
             // get EntityPlayer from the CraftPlayer
@@ -193,5 +211,8 @@ public class EssentialsEvents implements Listener {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
             e.printStackTrace();
         }
+
+        // call this here to update Player.displayName and playerlist
+        target.setDisplayNick();
     }
 }
