@@ -4,7 +4,6 @@ import com.comphenix.packetwrapper.*;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.*;
-import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
 import net.ess3.api.events.NickChangeEvent;
 import org.bukkit.Location;
@@ -12,15 +11,12 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerChatEvent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 
-import static pl.szczodrzynski.nicknametag.Utils.ut;
+import static pl.szczodrzynski.nicknametag.Main.*;
 
 public class EssentialsEvents implements Listener {
 
@@ -30,12 +26,7 @@ public class EssentialsEvents implements Listener {
     EssentialsEvents(Main plugin, Server server) {
         this.plugin = plugin;
         this.server = server;
-        if (server.getPluginManager().isPluginEnabled("Essentials")) {
-            server.getPluginManager().registerEvents(this, plugin);
-        }
-        else {
-            server.getLogger().warning("Essentials NOT found");
-        }
+        server.getPluginManager().registerEvents(this, plugin);
     }
 
     private void sendPacket(Player player, PacketContainer packet) throws InvocationTargetException {
@@ -55,7 +46,7 @@ public class EssentialsEvents implements Listener {
                 WrappedChatComponent.fromText(newDisplayName)
         );
         // modify the newly created PlayerInfoData to contain the new nickname
-        plugin.modifyPlayerInfoData(playerInfoData, newDisplayName);
+        plugin.modifyPlayerInfoData(playerInfoData, newDisplayName, headTagAddPrefix, headTagAddSuffix);
         // add the PlayerInfoData to the packet
         playerInfo.setData(Collections.singletonList(playerInfoData));
 
@@ -64,6 +55,8 @@ public class EssentialsEvents implements Listener {
 
     @EventHandler
     public void onNickChange(NickChangeEvent event) {
+        if (!headTagEnable)
+            return;
         Player player = event.getController().getBase();
         User target = (User) event.getController();
         event.setCancelled(true);
@@ -71,12 +64,12 @@ public class EssentialsEvents implements Listener {
         // get the user input
         String newDisplayName = event.getValue();
         // change two underscores to allow spaces in the nickname
-        newDisplayName = newDisplayName == null ? null : newDisplayName.replace("__", " ");
+        newDisplayName = newDisplayName == null ? null : allowSpaces ? newDisplayName.replace("__", " ") : newDisplayName;
         // set the nickname in Essentials config (does not update Player.displayName yet)
         target.setNickname(newDisplayName);
 
         // get a nickname containing (optionally) 'ops-name-color', 'nickname-prefix'
-        newDisplayName = target.getNick(true, false, false);
+        newDisplayName = target.getNick(true, headTagAddPrefix, headTagAddSuffix);
 
         // can't call setDisplayNick here:
         // this command changes playerlist display name (Player.setPlayerListName();)

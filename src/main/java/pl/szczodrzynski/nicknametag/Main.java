@@ -3,7 +3,10 @@ package pl.szczodrzynski.nicknametag;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import com.earth2me.essentials.Essentials;
+import com.earth2me.essentials.User;
 import org.bukkit.Server;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,7 +18,6 @@ import org.bukkit.scoreboard.Team;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -28,17 +30,50 @@ public class Main extends JavaPlugin implements Listener {
 
     private Server server;
     private Scoreboard scoreboard;
+    private Essentials ess;
+
+    static boolean allowSpaces = true;
+    static boolean headTagEnable = true;
+    static boolean headTagAddPrefix = false;
+    static boolean headTagAddSuffix = false;
+    static boolean headTagIgnoreNoSkin = true;
+    static boolean serverListEnable = true;
+    static boolean serverListAddPrefix = true;
+    static boolean serverListAddSuffix = true;
 
     @Override
     public void onEnable() {
         this.server = getServer();
         this.scoreboard = server.getScoreboardManager().getMainScoreboard();
+
+        // load config values
+        saveDefaultConfig();
+        reloadConfig();
+        FileConfiguration config = getConfig();
+        allowSpaces = config.getBoolean("allow-spaces");
+        headTagEnable = config.getBoolean("head-tag.enable");
+        headTagAddPrefix = config.getBoolean("head-tag.add-prefix");
+        headTagAddSuffix = config.getBoolean("head-tag.add-suffix");
+        headTagIgnoreNoSkin = config.getBoolean("head-tag.ignore-no-skin");
+        serverListEnable = config.getBoolean("server-list.enable");
+        serverListAddPrefix = config.getBoolean("server-list.add-prefix");
+        serverListAddSuffix = config.getBoolean("server-list.add-suffix");
+
         // register events
         getServer().getPluginManager().registerEvents(this, this);
-        // register packet listener
+        // register packet listeners
         ProtocolLibrary.getProtocolManager().addPacketListener(new PlayerInfoListener(this));
+        ProtocolLibrary.getProtocolManager().addPacketListener(new ServerListListener(this));
 
-        new EssentialsEvents(this, server);
+        if (server.getPluginManager().isPluginEnabled("Essentials")) {
+            ess = (Essentials) server.getPluginManager().getPlugin("Essentials");
+            new EssentialsEvents(this, server);
+        }
+        else {
+            ess = null;
+            getLogger().warning("Essentials NOT found");
+        }
+
     }
 
     /*@EventHandler
@@ -53,23 +88,30 @@ public class Main extends JavaPlugin implements Listener {
         scoreboard.getTeam(player.getName()).unregister();
     }
 
-    void modifyPlayerInfoData(PlayerInfoData playerInfoData, String newDisplayName) throws IllegalAccessException, NoSuchFieldException {
-        // get the original WrappedGameProfile
-        WrappedGameProfile originalProfile = playerInfoData.getProfile();
-        // skip if no properties are set, to not modify the skin name
-        if (originalProfile.getProperties().size() == 0)
-            return;
-
+    WrappedGameProfile modifyWrappedGameProfile(WrappedGameProfile originalProfile, String newDisplayName, boolean splitBy16Chars, boolean withPrefix, boolean withSuffix) throws IllegalAccessException, NoSuchFieldException {
         // get a GameProfile class
         Class gameProfileClass = originalProfile.getHandleType();
 
         // get the real player's data
         UUID playerUUID = originalProfile.getUUID();
         Player player = server.getPlayer(playerUUID);
-        if (newDisplayName == null)
+
+        if (ess != null && newDisplayName == null) {
+            User user = ess.getUser(player);
+            newDisplayName = user.getNick(true, withPrefix, withSuffix);
+            /*if (withPrefix)
+                newDisplayName = t(ess.getPermissionsHandler().getPrefix(player)) + newDisplayName;
+            if (withSuffix)
+                newDisplayName = newDisplayName + t(ess.getPermissionsHandler().getSuffix(player));*/
+        }
+        else if (newDisplayName == null)
             newDisplayName = player.getDisplayName();
 
-        String name = prepareTeam(player.getName(), newDisplayName);
+        String name;
+        if (splitBy16Chars)
+            name = prepareTeam(player.getName(), newDisplayName);
+        else
+            name = newDisplayName;
 
         // get the PropertyMap field of GameProfile
         Field propertiesField = gameProfileClass.getDeclaredField("properties");
@@ -88,6 +130,20 @@ public class Main extends JavaPlugin implements Listener {
 
         // put the original properties into GameProfile
         propertiesField.set(newProfile.getHandle(), properties);
+
+        return newProfile;
+    }
+
+    void modifyPlayerInfoData(PlayerInfoData playerInfoData, String newDisplayName, boolean withPrefix, boolean withSuffix) throws IllegalAccessException, NoSuchFieldException {
+        // get the original WrappedGameProfile
+        WrappedGameProfile originalProfile = playerInfoData.getProfile();
+        // skip if no properties are set, to not modify the skin name
+        // do not skip if the config option is disabled
+        if (originalProfile.getProperties().size() == 0 && headTagIgnoreNoSkin)
+            return;
+
+        // modify the profile with given display name
+        WrappedGameProfile newProfile = modifyWrappedGameProfile(originalProfile, newDisplayName, true, withPrefix, withSuffix);
 
         // set the newly created WrappedGameProfile into PlayerInfoData
         Field profileField = playerInfoData.getClass().getDeclaredField("profile");
@@ -117,8 +173,6 @@ public class Main extends JavaPlugin implements Listener {
         while (matcher.find()) {
             parts.add(matcher.group(1));
         }
-
-        getLogger().info("name "+displayName+" "+Arrays.toString(parts.toArray()));
 
         if (parts.size() == 1) {
             name = parts.get(0);

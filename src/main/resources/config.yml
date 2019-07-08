@@ -1,0 +1,26 @@
+# Enable or disable modifying various game parts by NicknameTag.
+# Prefixes and suffixes are ignored if Essentials/EssentialsX is not installed.
+
+# whether double underscores in nicknames should be replaced by a space
+# this will work only with Essentials/EssentialsX and only if head-tag.enable = true
+allow-spaces: true
+
+# the player's head tag
+head-tag:
+  enable: true
+  add-prefix: false
+  add-suffix: false
+  # Enable this if you have SkinsRestorer or other skin changing plugin
+  # this option prevents modifying the name before the skin was loaded
+  # so the player will not get a skin representing his nickname
+  #
+  # Disable this if no such plugin is present, because it might not change
+  # the head tag correctly
+  ignore-no-skin: true
+
+# player list that shows when you hover on the player counter
+# note: this is not the Tab-List
+server-list:
+  enable: true
+  add-prefix: true
+  add-suffix: true

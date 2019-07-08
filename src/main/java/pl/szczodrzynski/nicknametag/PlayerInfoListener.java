@@ -7,9 +7,10 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
-import org.bukkit.Server;
 
 import java.util.List;
+
+import static pl.szczodrzynski.nicknametag.Main.*;
 
 public class PlayerInfoListener extends PacketAdapter {
 
@@ -22,6 +23,8 @@ public class PlayerInfoListener extends PacketAdapter {
 
     @Override
     public void onPacketSending(PacketEvent event) {
+        if (!headTagEnable)
+            return;
         WrapperPlayServerPlayerInfo playerInfo = new WrapperPlayServerPlayerInfo(event.getPacket());
         if (playerInfo.getAction() != EnumWrappers.PlayerInfoAction.ADD_PLAYER)
             return;
@@ -29,7 +32,7 @@ public class PlayerInfoListener extends PacketAdapter {
         List<PlayerInfoData> dataList = playerInfo.getData();
         for (PlayerInfoData playerInfoData: dataList) {
             try {
-                plugin.modifyPlayerInfoData(playerInfoData, null);
+                plugin.modifyPlayerInfoData(playerInfoData, null, headTagAddPrefix, headTagAddSuffix);
             } catch (NullPointerException | NoSuchFieldException | IllegalAccessException e) {
                 e.printStackTrace();
             }
