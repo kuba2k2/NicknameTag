@@ -18,8 +18,8 @@ repositories {
 
 dependencies {
     compileOnly "org.bukkit:bukkit:1.10.2-R0.1-SNAPSHOT"
-    compileOnly "com.comphenix.protocol:ProtocolLib:4.4.0"
-    compileOnly("net.ess3:EssentialsX:2.16.1") {
+    compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
+    compileOnly("net.ess3:EssentialsX:2.17.1") {
         exclude group: 'io.papermc'
         exclude group: 'org.bukkit'
     }
