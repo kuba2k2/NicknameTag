@@ -5,6 +5,8 @@ import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -85,7 +87,11 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        scoreboard.getTeam(player.getName()).unregister();
+        if (scoreboard == null || player == null)
+            return;
+        Team team = scoreboard.getTeam(player.getName());
+        if (team != null)
+            team.unregister();
     }
 
     WrappedGameProfile modifyWrappedGameProfile(WrappedGameProfile originalProfile, String newDisplayName, boolean splitBy16Chars, boolean withPrefix, boolean withSuffix) throws IllegalAccessException, NoSuchFieldException {
@@ -94,21 +100,34 @@ public class Main extends JavaPlugin implements Listener {
 
         // get the real player's data
         UUID playerUUID = originalProfile.getUUID();
-        Player player = server.getPlayer(playerUUID);
+        OfflinePlayer player = server.getPlayer(playerUUID);
+        if (player == null)
+            player = server.getOfflinePlayer(playerUUID);
+        if (player == null) {
+            System.out.println("Player == null for name: "+originalProfile.getName()+", UUID: "+originalProfile.getUUID());
+        }
 
-        if (ess != null && newDisplayName == null) {
+        if (ess != null && player != null && newDisplayName == null) {
             User user = ess.getUser(player);
-            newDisplayName = user.getNick(true, withPrefix, withSuffix);
+            if (user == null) {
+                user = ess.getOfflineUser(originalProfile.getName());
+            }
+            if (user == null) {
+                System.out.println("Player "+player.getName()+" with UUID "+playerUUID.toString()+" is null");
+            }
+            else {
+                newDisplayName = user.getNick(true, withPrefix, withSuffix);
+            }
             /*if (withPrefix)
                 newDisplayName = t(ess.getPermissionsHandler().getPrefix(player)) + newDisplayName;
             if (withSuffix)
                 newDisplayName = newDisplayName + t(ess.getPermissionsHandler().getSuffix(player));*/
         }
-        else if (newDisplayName == null)
-            newDisplayName = player.getDisplayName();
+        else if (newDisplayName == null && player instanceof Player)
+            newDisplayName = ((Player)player).getDisplayName();
 
         String name;
-        if (splitBy16Chars)
+        if (splitBy16Chars && player != null)
             name = prepareTeam(player.getName(), newDisplayName);
         else
             name = newDisplayName;
@@ -154,6 +173,10 @@ public class Main extends JavaPlugin implements Listener {
     private String prepareTeam(String playerName, String displayName) {
         displayName = ut(displayName);
 
+        if (displayName.endsWith("&r")) {
+            displayName = displayName.substring(0, displayName.length()-2);
+        }
+
         // create or get a Team for the player
         Team team;
         if ((team = scoreboard.getTeam(playerName)) == null) {
@@ -167,7 +190,7 @@ public class Main extends JavaPlugin implements Listener {
         String name = "";
         String suffix = "";
 
-        Matcher matcher = Pattern.compile("(.{1,15}[^&]?)").matcher(displayName);
+        Matcher matcher = Pattern.compile("(.{1,13}[^&]?)").matcher(displayName);
 
         List<String> parts = new ArrayList<>();
         while (matcher.find()) {
@@ -190,9 +213,35 @@ public class Main extends JavaPlugin implements Listener {
         team.setPrefix(t(prefix));
         team.setSuffix(t(suffix));
 
+        // gather all formatting other than colors
+        StringBuilder format = new StringBuilder();
+
+        // find all formatting codes
+        matcher = Pattern.compile("&([0-9A-z])").matcher(prefix);
+        while (matcher.find()) {
+            ChatColor code = ChatColor.getByChar(matcher.group(1));
+            if (code != null) {
+                if (code.ordinal() <= 0xF) {
+                    // set team color to last color in nickname
+                    team.setColor(code);
+                    // clear other formatting codes
+                    format = new StringBuilder();
+                }
+                else {
+                    // save formatting code to prepend it to player's name part
+                    format.append('&');
+                    format.append(code.getChar());
+                }
+            }
+        }
+
+        name = format.toString() + name;
+
         if (!team.hasEntry(t(name))) {
             team.addEntry(t(name));
         }
+
+        System.out.println("Prefix: "+prefix+", name: "+name+", suffix: "+suffix+", color: "+team.getColor().name()+". Display name: "+displayName);
 
         return t(name);
     }

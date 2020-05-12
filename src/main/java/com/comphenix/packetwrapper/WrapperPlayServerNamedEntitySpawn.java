@@ -18,16 +18,16 @@
  */
 package com.comphenix.packetwrapper;
 
-import java.util.UUID;
-
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
-import org.bukkit.util.Vector;
-
+import com.comphenix.packetwrapper.util.Removed;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.util.Vector;
+
+import java.util.UUID;
 
 public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 	public static final PacketType TYPE =
@@ -46,7 +46,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 	 * Retrieve Entity ID.
 	 * <p>
 	 * Notes: entity's ID
-	 * 
+	 *
 	 * @return The current Entity ID
 	 */
 	public int getEntityID() {
@@ -55,7 +55,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Set Entity ID.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
 	public void setEntityID(int value) {
@@ -64,7 +64,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Retrieve the entity of the painting that will be spawned.
-	 * 
+	 *
 	 * @param world - the current world of the entity.
 	 * @return The spawned entity.
 	 */
@@ -74,7 +74,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Retrieve the entity of the painting that will be spawned.
-	 * 
+	 *
 	 * @param event - the packet event.
 	 * @return The spawned entity.
 	 */
@@ -86,7 +86,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 	 * Retrieve Player UUID.
 	 * <p>
 	 * Notes: player's UUID
-	 * 
+	 *
 	 * @return The current Player UUID
 	 */
 	public UUID getPlayerUUID() {
@@ -95,7 +95,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Set Player UUID.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
 	public void setPlayerUUID(UUID value) {
@@ -104,7 +104,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Retrieve the position of the spawned entity as a vector.
-	 * 
+	 *
 	 * @return The position as a vector.
 	 */
 	public Vector getPosition() {
@@ -113,7 +113,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Set the position of the spawned entity using a vector.
-	 * 
+	 *
 	 * @param position - the new position.
 	 */
 	public void setPosition(Vector position) {
@@ -148,7 +148,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Retrieve the yaw of the spawned entity.
-	 * 
+	 *
 	 * @return The current Yaw
 	 */
 	public float getYaw() {
@@ -157,7 +157,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Set the yaw of the spawned entity.
-	 * 
+	 *
 	 * @param value - new yaw.
 	 */
 	public void setYaw(float value) {
@@ -166,7 +166,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Retrieve the pitch of the spawned entity.
-	 * 
+	 *
 	 * @return The current pitch
 	 */
 	public float getPitch() {
@@ -175,7 +175,7 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 
 	/**
 	 * Set the pitch of the spawned entity.
-	 * 
+	 *
 	 * @param value - new pitch.
 	 */
 	public void setPitch(float value) {
@@ -186,18 +186,20 @@ public class WrapperPlayServerNamedEntitySpawn extends AbstractPacket {
 	 * Retrieve Metadata.
 	 * <p>
 	 * Notes: the client will crash if no metadata is sent
-	 * 
+	 *
 	 * @return The current Metadata
 	 */
+	@Removed
 	public WrappedDataWatcher getMetadata() {
 		return handle.getDataWatcherModifier().read(0);
 	}
 
 	/**
 	 * Set Metadata.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
+	@Removed
 	public void setMetadata(WrappedDataWatcher value) {
 		handle.getDataWatcherModifier().write(0, value);
 	}

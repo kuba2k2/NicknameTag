@@ -3,7 +3,10 @@ package pl.szczodrzynski.nicknametag;
 import com.comphenix.packetwrapper.*;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.*;
+import com.comphenix.protocol.wrappers.EnumWrappers;
+import com.comphenix.protocol.wrappers.PlayerInfoData;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import com.earth2me.essentials.User;
 import net.ess3.api.events.NickChangeEvent;
 import org.bukkit.Location;
@@ -98,13 +101,13 @@ public class EssentialsEvents implements Listener {
             addNamed.setZ(location.getZ());
             addNamed.setYaw(location.getYaw());
             addNamed.setPitch(location.getPitch());
-            addNamed.setMetadata(new WrappedDataWatcher(player));
+            //addNamed.setMetadata(new WrappedDataWatcher(player));
 
 
             WrapperPlayServerRespawn respawn = new WrapperPlayServerRespawn();
             World world = player.getWorld();
             respawn.setDimension(world.getEnvironment().getId());
-            respawn.setDifficulty(EnumWrappers.Difficulty.valueOf(world.getDifficulty().name()));
+            //respawn.setDifficulty(EnumWrappers.Difficulty.valueOf(world.getDifficulty().name()));
             respawn.setLevelType(world.getWorldType());
             respawn.setGamemode(EnumWrappers.NativeGameMode.fromBukkit(player.getGameMode()));
 
@@ -190,7 +193,7 @@ public class EssentialsEvents implements Listener {
                     sendPacket(onlinePlayer, addInfo.getHandle());
                 }
             } /* for (Player onlinePlayer: server.getOnlinePlayers()) */
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

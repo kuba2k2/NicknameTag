@@ -18,12 +18,12 @@
  */
 package com.comphenix.packetwrapper;
 
-import org.bukkit.WorldType;
-
+import com.comphenix.packetwrapper.util.Removed;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.EnumWrappers.Difficulty;
 import com.comphenix.protocol.wrappers.EnumWrappers.NativeGameMode;
+import org.bukkit.WorldType;
 
 public class WrapperPlayServerRespawn extends AbstractPacket {
 	public static final PacketType TYPE = PacketType.Play.Server.RESPAWN;
@@ -41,38 +41,40 @@ public class WrapperPlayServerRespawn extends AbstractPacket {
 	 * Retrieve Dimension.
 	 * <p>
 	 * Notes: -1: The Nether, 0: The Overworld, 1: The End
-	 * 
+	 *
 	 * @return The current Dimension
 	 */
 	public int getDimension() {
-		return handle.getIntegers().read(0);
+		return handle.getDimensions().optionRead(0).orElse(0);
 	}
 
 	/**
 	 * Set Dimension.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
 	public void setDimension(int value) {
-		handle.getIntegers().write(0, value);
+		handle.getDimensions().write(0, value);
 	}
 
 	/**
 	 * Retrieve Difficulty.
 	 * <p>
 	 * Notes: 0 thru 3 for Peaceful, Easy, Normal, Hard.
-	 * 
+	 *
 	 * @return The current Difficulty
 	 */
+	@Removed
 	public Difficulty getDifficulty() {
 		return handle.getDifficulties().read(0);
 	}
 
 	/**
 	 * Set Difficulty.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
+	@Removed
 	public void setDifficulty(Difficulty value) {
 		handle.getDifficulties().write(0, value);
 	}
@@ -82,7 +84,7 @@ public class WrapperPlayServerRespawn extends AbstractPacket {
 	 * <p>
 	 * Notes: 0: survival, 1: creative, 2: adventure. The hardcore flag is not
 	 * included
-	 * 
+	 *
 	 * @return The current Gamemode
 	 */
 	public NativeGameMode getGamemode() {
@@ -91,7 +93,7 @@ public class WrapperPlayServerRespawn extends AbstractPacket {
 
 	/**
 	 * Set Gamemode.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
 	public void setGamemode(NativeGameMode value) {
@@ -102,7 +104,7 @@ public class WrapperPlayServerRespawn extends AbstractPacket {
 	 * Retrieve Level Type.
 	 * <p>
 	 * Notes: same as Join Game
-	 * 
+	 *
 	 * @return The current Level Type
 	 */
 	public WorldType getLevelType() {
@@ -111,7 +113,7 @@ public class WrapperPlayServerRespawn extends AbstractPacket {
 
 	/**
 	 * Set Level Type.
-	 * 
+	 *
 	 * @param value - new value.
 	 */
 	public void setLevelType(WorldType value) {
